@@ -49,57 +49,92 @@ Evaluate the model with the testing data.
 ### Name: SRISHA
 ### Register Number: 212224040328
 ```
-#creating model class
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+
+df1=pd.read_csv("/content/nn-dl-exp.csv")
+X = df1[['input']].values
+y = df1[['output']].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=33)
+
+scaler = MinMaxScaler()
+X_train = scaler.fit_transform(X_train)
+X_test =  scaler.transform(X_test)
+
+X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
+X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
+
 class NeuralNet(nn.Module):
-  def __init__(self):
+    def __init__(self):
         super().__init__()
-        self.fc1=nn.Linear(1, 8)
-        self.fc2=nn.Linear(8, 10)
-        self.fc3=nn.Linear(10, 1)
+        self.fc1=nn.Linear(1,10)
+        self.fc2=nn.Linear(10,18)
+        self.fc3=nn.Linear(18,1)
         self.relu=nn.ReLU()
         self.history={'loss':[]}
 
-  def forward(self,x):
+    def forward(self,x):
         x=self.relu(self.fc1(x))
         x=self.relu(self.fc2(x))
         x=self.fc3(x)
         return x
 
 # Initialize the Model, Loss Function, and Optimizer
-ai_brain = NeuralNet()
+ai_brain=NeuralNet()
 criterion=nn.MSELoss()
-optimizer=optim.RMSprop(ai_brain.parameters(), lr=0.001)
+optimizer=optim.RMSprop(ai_brain.parameters(),lr=0.001)
 
-#Function to train model
+
 def train_model(ai_brain, X_train, y_train, criterion, optimizer, epochs=2000):
-
     for epoch in range(epochs):
-      optimizer.zero_grad()
-      loss=criterion(ai_brain(X_train),y_train)
-      loss.backward()
-      optimizer.step()
+    optimizer.zero_grad()
+    loss=criterion(ai_brain(X_train),y_train)
+    loss.backward()
+    optimizer.step()
 
-      ai_brain.history['loss'].append(loss.item())
-      if epoch % 200 == 0:
-          print(f'Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}')    
+    ai_brain.history['loss'].append(loss.item())
+    if epoch%200==0:
+      print(f'Epoch [{epoch}/{epochs}], Loss:{loss.item():.6f}')
 
+with torch.no_grad():
+    test_loss = criterion(ai_brain(X_test_tensor), y_test_tensor)
+    print(f'Test Loss: {test_loss.item():.6f}')
+
+loss_df = pd.DataFrame(ai_brain.history)
+
+import matplotlib.pyplot as plt
+loss_df.plot()
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.title("Loss during Training")
+plt.show()
+
+
+X_n1_1 = torch.tensor([[3]], dtype=torch.float32)
+prediction = ai_brain(torch.tensor(scaler.transform(X_n1_1), dtype=torch.float32)).item()
+print(f'Prediction: {prediction}')
+     
 ```
 ## Dataset Information
 
-
-<img width="274" height="523" alt="546759068-2dc3fa2d-c453-4512-8dc9-6dcbbfce96a7" src="https://github.com/user-attachments/assets/74db5b37-0750-43d4-bd9a-7e12e91d41c5" />
+<img width="277" height="517" alt="417167092-b8bb69d8-ea10-44f2-8e1b-3115c10b7ce1" src="https://github.com/user-attachments/assets/2e6f6033-ea51-4154-9e57-226bec0ccbec" />
 
 ## OUTPUT
 
-<img width="784" height="492" alt="546759137-e3fbdc58-644e-4ee4-a05f-c6e30a8d2eb0" src="https://github.com/user-attachments/assets/48aedf42-984f-42ce-a170-5b3fe277c033" />
+Training Loss VS Iteration Plot
 
-Include your plot here
+<img width="767" height="523" alt="420765636-54eff130-8d03-4ae7-8e1f-f21e9465fcab" src="https://github.com/user-attachments/assets/13c5f7e6-161e-4e66-b02e-977f80657b58" />
 
-<img width="720" height="572" alt="546759156-87168463-d0c2-4470-ba1d-f35e92192db8" src="https://github.com/user-attachments/assets/91b5b305-4b21-4c8f-8c0b-7566e6dae03e" />
+ New sample Data Prediction
 
-Include your sample input and output here
-
-<img width="793" height="400" alt="546199086-5d566fda-2ea2-4352-a96f-d9b8c625496b" src="https://github.com/user-attachments/assets/616da18c-dd4f-40ba-bd03-bed3eaa11d15" />
+ <img width="831" height="273" alt="420765814-d6d202d2-37d1-4d7f-9f91-312f20a9dc7e" src="https://github.com/user-attachments/assets/c1f28d56-85ff-47e5-a3f7-c87a37cdf3ea" />
 
 
 ## RESULT
